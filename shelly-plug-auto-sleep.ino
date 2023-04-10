@@ -73,10 +73,10 @@ void rest_api_action(int action) {
   if ((wifiMulti.run() == WL_CONNECTED)) {
     switch (action) {
       case 0: // turn on the device
-        url = "http://" + String(HOST_IP) + "/rpc/Switch.Set?id=0&on=true";
+        url = "http://" + ip + "/rpc/Switch.Set?id=0&on=true";
         break;
       case 1:
-        url = "http://" + String(HOST_IP) + "/rpc/Switch.Set?id=0&on=false";
+        url = "http://" + ip + "/rpc/Switch.Set?id=0&on=false";
         break;
     }
     http.begin(url);
