@@ -14,7 +14,7 @@
   #define DEBUG_PRINTLN(...) (Serial.print("DEBUG: "), Serial.println(__VA_ARGS__))
   #define DEBUG_PRINTFLN(...) (Serial.print("DEBUG: "), Serial.printf(__VA_ARGS__), Serial.println(""))
 #else
-  #define POWER_OFF_DELAY 1000 * 60 * 60 // 1 hour
+  #define POWER_OFF_DELAY 1000 * 60 * 10 // 10 minutes
   #define DEBUG_PRINT(...) ((void)0)
   #define DEBUG_PRINTLN(...) ((void)0)
   #define DEBUG_PRINTFLN(...) ((void)0)
@@ -122,11 +122,11 @@ void power_on(void) {
 }
 
 
-bool minOffTimeMet(int t) {
+bool minimum_off_time_met(int t) {
   return state == 0 || (millis() - offTime >= t);
 }
 
-void detectMotion(void) {
+void detect_motion(void) {
   DEBUG_PRINTLN(F("[+] Detecting movement..."));
   if (radar.movingTargetDetected() && radar.movingTargetDistance() <= MAX_DISTANCE) {
     DEBUG_PRINTLN(F("[!] Moving target detected."));
@@ -138,6 +138,7 @@ void detectMotion(void) {
   uint32_t d0;
   d0 = radar.stationaryTargetDistance();
   delay(1000);
+  radar.read();
   if (d0 <= MAX_DISTANCE && d0 != radar.stationaryTargetDistance()) {
     DEBUG_PRINTLN(F("[!] Stationary target detected."));
     lastMotion = millis();
@@ -198,7 +199,7 @@ void loop() {
     // Read device every READ_DELAY while device is connected.
     lastReading = millis();
     
-    if (state == 2 && minOffTimeMet(MINIMUM_TIME_OFF) && !ledOff) {
+    if (state == 2 && minimum_off_time_met(MINIMUM_TIME_OFF) && !ledOff) {
       // if the device is off and the led has been on longer than MINIMUM_TIME_OFF
       // then turn off the led
       DEBUG_PRINTFLN("Off for more than %d.", MINIMUM_TIME_OFF);
@@ -224,9 +225,9 @@ void loop() {
       if (radar.isConnected()) {
         if (radar.presenceDetected() && radar.stationaryTargetDetected()) {
           // Presence detected
-          detectMotion();
+          detect_motion();
 
-          if (state != 1 && minOffTimeMet(MINIMUM_TIME_OFF) && radar.stationaryTargetDistance() <= MAX_DISTANCE) {
+          if (state != 1 && minimum_off_time_met(MINIMUM_TIME_OFF) && radar.stationaryTargetDistance() <= MAX_DISTANCE) {
             // stationary target is less than 100cm away, device is not powered on, and device has been off for at least MINIUM_TIME_OFF.
             power_on();
           } else if (state != 2 && (millis() - lastMotion >= POWER_OFF_DELAY) && (radar.stationaryTargetDistance() > MAX_DISTANCE)) {
